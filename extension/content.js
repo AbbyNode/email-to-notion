@@ -21,7 +21,9 @@
   let currentEmailData = null;
 
   // ── MutationObserver: watch for email thread to open ──────────────────────
-  const observer = new MutationObserver(debounce(onDomChange, 400));
+  // Use a longer debounce so that Gmail's dynamic label/tag loading (which
+  // fires many rapid mutations) settles before we try to inject / re-inject.
+  const observer = new MutationObserver(debounce(onDomChange, 600));
   observer.observe(document.body, { childList: true, subtree: true });
 
   // Run once on load in case the email is already open
@@ -63,8 +65,21 @@
    * Inject the "Export to Notion" button directly to the left of the print button.
    */
   function injectNotionButton(printButton) {
-    // Avoid double-injection
-    if (injectedButton && document.body.contains(injectedButton)) return;
+    // Avoid double-injection: only skip if our button is still in the same
+    // parent container as the print button. Gmail can replace the toolbar
+    // node (e.g. after loading labels/tags), leaving our button detached
+    // even though document.body.contains() might still return true briefly.
+    if (
+      injectedButton &&
+      document.body.contains(injectedButton) &&
+      injectedButton.parentNode === printButton.parentNode
+    ) return;
+
+    // Clean up any detached/orphaned previous button
+    if (injectedButton) {
+      injectedButton.remove();
+      injectedButton = null;
+    }
 
     const btn = document.createElement("button");
     btn.id = "email-to-notion-btn";
@@ -119,12 +134,26 @@
 
     // --- Sender ---
     // The expanded email header has <span email="..." name="...">
-    const senderSpan = document.querySelector(
-      'span[email].gD, .iw span[email], .gFxsud span[email]'
-    );
+    // Gmail uses several different wrapper classes depending on version/state;
+    // try a broad set of selectors and fall back to any visible [email] span.
+    const senderSpan =
+      document.querySelector('span[email].gD') ||
+      document.querySelector('.iw span[email]') ||
+      document.querySelector('.gFxsud span[email]') ||
+      document.querySelector('.cf.gt span[email]') ||
+      document.querySelector('.go span[email]') ||
+      // Broadest fallback: first [email] span anywhere in the thread view
+      document.querySelector('.h7 span[email], .bA4 span[email], [email].g2');
     if (senderSpan) {
       data.sender = senderSpan.getAttribute("name") || senderSpan.textContent.trim();
       data.senderEmail = senderSpan.getAttribute("email") || "";
+    } else {
+      // Last-resort: find any span with an "email" attribute in the page
+      const anyEmailSpan = document.querySelector('span[email]');
+      if (anyEmailSpan) {
+        data.sender = anyEmailSpan.getAttribute("name") || anyEmailSpan.textContent.trim();
+        data.senderEmail = anyEmailSpan.getAttribute("email") || "";
+      }
     }
 
     // --- Date ---
@@ -138,13 +167,21 @@
     }
 
     // --- Body ---
-    // The message body lives inside .a3s.aiL (Gmail's main message container)
-    // There may be multiple (thread), we take the last (most recent) non-quoted one
-    const bodyEls = document.querySelectorAll(".a3s.aiL, .a3s.aXjCH");
+    // Gmail's message body container uses several class combinations depending
+    // on thread expansion state and Gmail version. Query all known variants
+    // and pick the last non-empty one.
+    const bodyEls = document.querySelectorAll(
+      ".a3s.aiL, .a3s.aXjCH, .ii.gt .a3s, .a3s"
+    );
     if (bodyEls.length > 0) {
-      // Use the last expanded message in the thread
-      const lastBody = bodyEls[bodyEls.length - 1];
-      data.body = extractTextFromBody(lastBody);
+      // Walk from last to first, take the first one that has visible text
+      for (let i = bodyEls.length - 1; i >= 0; i--) {
+        const text = extractTextFromBody(bodyEls[i]);
+        if (text.length > 0) {
+          data.body = text;
+          break;
+        }
+      }
     }
 
     return data;

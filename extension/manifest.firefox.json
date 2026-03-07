@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Email to Notion",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Export Gmail emails to a Notion database with one click.",
   "permissions": [
     "storage",
