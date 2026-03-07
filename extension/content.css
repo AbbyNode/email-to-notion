@@ -179,32 +179,22 @@
   cursor: not-allowed;
 }
 
-.etn-field {
-  position: relative;
+/* Database selector row: label stacks above, then select + refresh button sit side-by-side */
+.etn-field-db {
+  flex-direction: column;
+  gap: 6px;
 }
 
-/* Database selector row */
-.etn-field .etn-select + .etn-btn-icon {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-}
-
-/* Inline layout for db select + refresh */
-#etn-db-select ~ .etn-btn-icon {
-  position: static;
-}
-
-.etn-field:has(#etn-db-select) {
-  flex-direction: row;
-  align-items: flex-end;
+.etn-db-row {
+  display: flex;
+  align-items: stretch;
   gap: 8px;
+  width: 100%;
 }
 
-.etn-field:has(#etn-db-select) label {
-  display: block;
-  width: 100%;
-  flex: 0 0 100%;
+.etn-db-row .etn-select {
+  flex: 1;
+  min-width: 0; /* allow shrinking inside flex */
 }
 
 .etn-btn-icon {

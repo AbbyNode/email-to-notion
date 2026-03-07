@@ -24,6 +24,7 @@ const SHARED_FILES = [
   "background.js",
   "content.js",
   "content.css",
+  "modal",
   "popup",
   "options",
   "icons",

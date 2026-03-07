@@ -192,7 +192,8 @@
 
   /**
    * Open a modal overlay inside the Gmail page for the export UI.
-   * We build the modal DOM in JS so it works without a separate HTML file load.
+   * The markup is loaded from modal/modal.html (a web-accessible resource),
+   * keeping JS and HTML cleanly separated.
    */
   function openExportModal(emailData) {
     // Remove existing modal
@@ -201,12 +202,28 @@
     const overlay = document.createElement("div");
     overlay.id = "etn-modal-overlay";
     overlay.className = "etn-modal-overlay";
-    overlay.innerHTML = buildModalHTML(emailData);
 
+    // ETN_MODAL_TEMPLATE is injected by modal/modal-template.js (loaded before
+    // this script in the manifest), keeping the HTML separate without any
+    // runtime file fetching — which is blocked in Firefox MV2 content scripts.
+    let html = ETN_MODAL_TEMPLATE; // eslint-disable-line no-undef
+
+    // Substitute runtime values into the template placeholders
+    const senderStr = emailData.sender
+      ? escapeHtml(emailData.sender) +
+        (emailData.senderEmail ? ` &lt;${escapeHtml(emailData.senderEmail)}&gt;` : "")
+      : "Unknown";
+
+    html = html
+      .replace("{{subject}}", escapeHtml(emailData.subject || "(No Subject)"))
+      .replace("{{sender}}",  senderStr)
+      .replace("{{date}}",    escapeHtml(emailData.date || ""));
+
+    overlay.innerHTML = html;
     document.body.appendChild(overlay);
     exportModal = overlay;
 
-    // Close on overlay click
+    // Close on backdrop click
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) closeModal();
     });
@@ -216,11 +233,14 @@
 
     // Escape key
     const onKeyDown = (e) => {
-      if (e.key === "Escape") { closeModal(); document.removeEventListener("keydown", onKeyDown); }
+      if (e.key === "Escape") {
+        closeModal();
+        document.removeEventListener("keydown", onKeyDown);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
 
-    // Load databases and set up form
+    // Load databases and set up form logic (async, runs in background)
     initModalLogic(overlay, emailData);
   }
 
@@ -229,85 +249,6 @@
       exportModal.remove();
       exportModal = null;
     }
-  }
-
-  function buildModalHTML(emailData) {
-    return `
-      <div class="etn-modal" role="dialog" aria-modal="true" aria-labelledby="etn-modal-title">
-        <div class="etn-modal-header">
-          <span class="etn-modal-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.373.466l1.822 1.447zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279V9.107l-1.215-.14c-.093-.514.28-.887.747-.933l3.222-.187z" fill="currentColor"/>
-            </svg>
-          </span>
-          <h2 id="etn-modal-title">Export to Notion</h2>
-          <button id="etn-close-btn" class="etn-close-btn" aria-label="Close">&times;</button>
-        </div>
-
-        <div class="etn-modal-body">
-          <!-- Auth status -->
-          <div id="etn-auth-section" class="etn-auth-section" style="display:none;">
-            <p>You need to connect your Notion account first.</p>
-            <button id="etn-auth-btn" class="etn-btn etn-btn-primary">Connect Notion</button>
-          </div>
-
-          <!-- Main export form -->
-          <div id="etn-form-section" style="display:none;">
-            <div class="etn-field">
-              <label for="etn-db-select">Notion Database</label>
-              <select id="etn-db-select" class="etn-select">
-                <option value="">Loading databases…</option>
-              </select>
-              <button id="etn-refresh-db" class="etn-btn-icon" title="Refresh databases" aria-label="Refresh databases">
-                ↻
-              </button>
-            </div>
-
-            <div class="etn-field etn-field-preview">
-              <label>Email Preview</label>
-              <div class="etn-preview">
-                <div class="etn-preview-row"><span class="etn-preview-label">Subject:</span> <span id="etn-preview-subject">${escapeHtml(emailData.subject || "(No Subject)")}</span></div>
-                <div class="etn-preview-row"><span class="etn-preview-label">From:</span> <span id="etn-preview-sender">${escapeHtml(emailData.sender || "Unknown")}${emailData.senderEmail ? ` &lt;${escapeHtml(emailData.senderEmail)}&gt;` : ""}</span></div>
-                <div class="etn-preview-row"><span class="etn-preview-label">Date:</span> <span id="etn-preview-date">${escapeHtml(emailData.date || "")}</span></div>
-              </div>
-            </div>
-
-            <div class="etn-field">
-              <label class="etn-section-label">Include in export</label>
-              <div class="etn-checkboxes">
-                <label class="etn-checkbox-label">
-                  <input type="checkbox" id="etn-opt-subject" checked> Email Subject as page title
-                </label>
-                <label class="etn-checkbox-label">
-                  <input type="checkbox" id="etn-opt-sender" checked> Sender name &amp; address
-                </label>
-                <label class="etn-checkbox-label">
-                  <input type="checkbox" id="etn-opt-date" checked> Date
-                </label>
-                <label class="etn-checkbox-label">
-                  <input type="checkbox" id="etn-opt-body" checked> Email body
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="etn-modal-footer" id="etn-footer" style="display:none;">
-          <span id="etn-status" class="etn-status"></span>
-          <div class="etn-footer-actions">
-            <button id="etn-cancel-btn" class="etn-btn etn-btn-secondary">Cancel</button>
-            <button id="etn-export-btn" class="etn-btn etn-btn-primary">
-              <span id="etn-export-btn-text">Export</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="etn-modal-spinner" id="etn-spinner" style="display:none;">
-          <div class="etn-spinner-ring"></div>
-          <p>Loading…</p>
-        </div>
-      </div>
-    `;
   }
 
   function escapeHtml(str) {
@@ -373,21 +314,36 @@
     const select = overlay.querySelector("#etn-db-select");
     select.innerHTML = '<option value="">Loading…</option>';
     select.disabled = true;
+    setStatus(overlay, "", "");
 
     const result = await sendMessage({ type: "LIST_DATABASES" });
     if (!result.ok) {
       select.innerHTML = '<option value="">Failed to load databases</option>';
-      setStatus(overlay, `Error: ${result.error}`, "error");
+      setStatus(overlay, `Could not load databases: ${result.error}`, "error");
+      select.disabled = false;
       return;
     }
 
-    const databases = result.data;
+    const databases = result.data ?? [];
+
+    if (databases.length === 0) {
+      select.innerHTML = '<option value="">No databases found — check integration permissions</option>';
+      setStatus(overlay, "No databases accessible. Make sure your Notion integration has been added to at least one database.", "error");
+      select.disabled = false;
+      return;
+    }
+
     select.innerHTML = '<option value="">— Select a database —</option>';
     for (const db of databases) {
-      const name = db.title?.[0]?.plain_text ?? db.id;
+      // Notion search results: title is an array of rich_text objects
+      const name =
+        db.title?.[0]?.plain_text ||
+        db.title?.[0]?.text?.content ||
+        (Array.isArray(db.title) && db.title.map((t) => t.plain_text ?? t.text?.content ?? "").join("")) ||
+        db.id;
       const opt = document.createElement("option");
       opt.value = db.id;
-      opt.textContent = name;
+      opt.textContent = name.trim() || `Untitled (${db.id.slice(0, 8)}…)`;
       select.appendChild(opt);
     }
     select.disabled = false;
