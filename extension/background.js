@@ -113,6 +113,31 @@ async function getDatabase(databaseId, accessToken) {
 }
 
 /**
+ * Ensure required properties exist in the database, creating any that are missing.
+ * @param {string} databaseId
+ * @param {string} accessToken
+ * @param {object} requiredProps  e.g. { From: { rich_text: {} }, Date: { date: {} } }
+ */
+async function ensureDatabaseProperties(databaseId, accessToken, requiredProps) {
+  const db = await getDatabase(databaseId, accessToken);
+  const existing = db.properties ?? {};
+
+  const missing = {};
+  for (const [name, schema] of Object.entries(requiredProps)) {
+    if (!existing[name]) {
+      missing[name] = schema;
+    }
+  }
+
+  if (Object.keys(missing).length === 0) return; // nothing to do
+
+  await notionFetch(`/databases/${databaseId}`, accessToken, {
+    method: "PATCH",
+    body: JSON.stringify({ properties: missing }),
+  });
+}
+
+/**
  * Create a page (email entry) in a Notion database.
  * @param {string} databaseId
  * @param {string} accessToken
@@ -120,6 +145,18 @@ async function getDatabase(databaseId, accessToken) {
  * @param {object} options    { includeSubject, includeSender, includeBody, includeDate }
  */
 async function createEmailPage(databaseId, accessToken, emailData, options) {
+  // Ensure any properties we intend to write actually exist in the database.
+  const requiredProps = {};
+  if (options.includeSender && emailData.sender) {
+    requiredProps["From"] = { rich_text: {} };
+  }
+  if (options.includeDate && emailData.date) {
+    requiredProps["Date"] = { date: {} };
+  }
+  if (Object.keys(requiredProps).length > 0) {
+    await ensureDatabaseProperties(databaseId, accessToken, requiredProps);
+  }
+
   // Build the properties object. We use a "Name" / title property and
   // rich_text properties for everything else. If the database has custom
   // schema the user can extend this via the options page.
