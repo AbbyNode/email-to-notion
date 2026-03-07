@@ -1,0 +1,361 @@
+/**
+ * content.css
+ * Styles for the injected Gmail button and export modal overlay.
+ */
+
+/* ── Injected Button ──────────────────────────────────────────────────────── */
+
+#email-to-notion-btn.email-to-notion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #444746;
+  cursor: pointer;
+  font-family: "Google Sans", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+  margin-right: 4px;
+  vertical-align: middle;
+  position: relative;
+}
+
+#email-to-notion-btn.email-to-notion-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
+}
+
+#email-to-notion-btn.email-to-notion-btn .etn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#email-to-notion-btn.email-to-notion-btn .etn-label {
+  white-space: nowrap;
+}
+
+/* ── Modal Overlay ────────────────────────────────────────────────────────── */
+
+#etn-modal-overlay.etn-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: etn-fade-in 0.15s ease;
+}
+
+@keyframes etn-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.etn-modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: #1a1a1a;
+  animation: etn-slide-in 0.2s ease;
+  position: relative;
+}
+
+@keyframes etn-slide-in {
+  from { transform: translateY(-12px) scale(0.98); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── Modal Header ─────────────────────────────────────────────────────────── */
+
+.etn-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #efefef;
+}
+
+.etn-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #1a1a1a;
+}
+
+.etn-modal-header h2 {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+}
+
+.etn-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  color: #999;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.etn-close-btn:hover { color: #333; }
+
+/* ── Modal Body ───────────────────────────────────────────────────────────── */
+
+.etn-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.etn-auth-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.etn-auth-section p {
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Fields */
+.etn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.etn-field label,
+.etn-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.etn-select {
+  padding: 9px 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fafafa;
+  transition: border-color 0.15s;
+  flex: 1;
+}
+
+.etn-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: #fff;
+}
+
+.etn-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.etn-field {
+  position: relative;
+}
+
+/* Database selector row */
+.etn-field .etn-select + .etn-btn-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* Inline layout for db select + refresh */
+#etn-db-select ~ .etn-btn-icon {
+  position: static;
+}
+
+.etn-field:has(#etn-db-select) {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.etn-field:has(#etn-db-select) label {
+  display: block;
+  width: 100%;
+  flex: 0 0 100%;
+}
+
+.etn-btn-icon {
+  background: #f0f0f0;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+.etn-btn-icon:hover { background: #e4e4e4; }
+
+/* Preview box */
+.etn-field-preview .etn-preview {
+  background: #f9f9f9;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.etn-preview-row {
+  font-size: 12px;
+  color: #444;
+  display: flex;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+.etn-preview-label {
+  font-weight: 600;
+  color: #888;
+  flex-shrink: 0;
+}
+
+/* Checkboxes */
+.etn-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.etn-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.etn-checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
+/* ── Modal Footer ─────────────────────────────────────────────────────────── */
+
+.etn-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #efefef;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fafafa;
+  border-radius: 0 0 14px 14px;
+}
+
+.etn-status {
+  flex: 1;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.etn-status-success { color: #16a34a; }
+.etn-status-error   { color: #dc2626; }
+.etn-status a { color: #4f46e5; }
+
+.etn-footer-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.etn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  font-family: inherit;
+}
+.etn-btn:disabled { opacity: 0.5; cursor: default; }
+
+.etn-btn-primary {
+  background: #1a1a1a;
+  color: #fff;
+}
+.etn-btn-primary:hover:not(:disabled) { background: #333; }
+
+.etn-btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+.etn-btn-secondary:hover:not(:disabled) { background: #e4e4e4; }
+
+/* ── Spinner (loading) ────────────────────────────────────────────────────── */
+
+.etn-modal-spinner {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 14px;
+  z-index: 10;
+}
+
+.etn-modal-spinner p {
+  font-size: 13px;
+  color: #777;
+}
+
+.etn-spinner-ring {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #eee;
+  border-top-color: #555;
+  border-radius: 50%;
+  animation: etn-spin 0.7s linear infinite;
+}
+
+@keyframes etn-spin { to { transform: rotate(360deg); } }

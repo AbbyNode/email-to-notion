@@ -1,0 +1,15 @@
+{
+  "name": "email-to-notion",
+  "version": "1.0.0",
+  "description": "Browser extension to export Gmail emails to Notion databases",
+  "private": true,
+  "scripts": {
+    "icons": "node icons/generate-icons.js",
+    "build": "node build.js",
+    "build:chrome": "node build.js chrome",
+    "build:firefox": "node build.js firefox"
+  },
+  "devDependencies": {
+    "canvas": "*"
+  }
+}

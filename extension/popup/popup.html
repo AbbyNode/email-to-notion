@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email to Notion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #fff;
+      width: 300px;
+      min-height: 160px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid #efefef;
+      background: #f9f9f9;
+    }
+
+    .header-icon svg { display: block; }
+
+    .header-text h1 {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .header-text p {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .body {
+      padding: 16px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.connected { background: #22c55e; }
+    .status-dot.disconnected { background: #ef4444; }
+
+    .status-text {
+      font-size: 13px;
+      color: #444;
+    }
+
+    .workspace-name {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    .btn-primary {
+      background: #000;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #222; }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #e4e4e4; }
+
+    .btn-danger {
+      background: #fff0f0;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    .btn-danger:hover:not(:disabled) { background: #fee2e2; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #efefef;
+      margin: 12px 0;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      padding: 10px 16px 14px;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: #888;
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: #333; text-decoration: underline; }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #999;
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ddd;
+      border-top-color: #555;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-box {
+      background: #f0f4ff;
+      border: 1px solid #c7d6ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #3b5bdb;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .gmail-hint {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .gmail-hint strong { color: #333; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.373.466l1.822 1.447zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279V9.107l-1.215-.14c-.093-.514.28-.887.747-.933l3.222-.187z" fill="#1a1a1a"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Email to Notion</h1>
+      <p>Export Gmail to Notion</p>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="loading" id="loading-state">
+      <div class="spinner"></div>
+      <span>Loading…</span>
+    </div>
+
+    <!-- Connected state -->
+    <div id="connected-state" style="display:none;">
+      <div class="status-row">
+        <div class="status-dot connected"></div>
+        <div class="status-text">
+          Connected to <span class="workspace-name" id="workspace-name">Notion</span>
+        </div>
+      </div>
+      <div class="gmail-hint">
+        <strong>How to export:</strong><br>
+        Open an email in Gmail and click the
+        <strong>Export to Notion</strong> button (next to the Print button).
+      </div>
+      <hr class="divider" />
+      <div class="actions">
+        <button class="btn btn-secondary" id="open-options-btn">⚙ Settings</button>
+        <button class="btn btn-danger" id="logout-btn">Disconnect Notion</button>
+      </div>
+    </div>
+
+    <!-- Disconnected state -->
+    <div id="disconnected-state" style="display:none;">
+      <div class="status-row">
+        <div class="status-dot disconnected"></div>
+        <div class="status-text">Not connected to Notion</div>
+      </div>
+      <div class="info-box">
+        Connect your Notion account to start exporting emails.
+        You'll need to configure your Notion integration credentials in Settings first.
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="connect-btn">Connect Notion Account</button>
+        <button class="btn btn-secondary" id="open-options-btn-disconnected">⚙ Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-links">
+    <a href="#" id="options-link">Options</a>
+    <a href="https://developers.notion.com" target="_blank" rel="noopener">Notion Docs</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
