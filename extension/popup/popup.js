@@ -10,6 +10,11 @@
 
   const browser = globalThis.browser ?? globalThis.chrome;
 
+  // ── Constants ──────────────────────────────────────────────────────────────
+
+  /** Sentinel value used in the Body mapping dropdown for "page body (blocks)". */
+  const PAGE_BODY_TARGET = "__page_body__";
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   let currentEmailData = null;
@@ -76,7 +81,7 @@
     if (el) el.style.display = "";
   }
 
-  function setWorkspaceNames(name) {
+  function setWorkspaceName(name) {
     document.querySelectorAll(".ws-name").forEach((el) => { el.textContent = name || "Notion"; });
   }
 
@@ -111,7 +116,7 @@
       return;
     }
 
-    setWorkspaceNames(auth.data.workspaceName);
+    setWorkspaceName(auth.data.workspaceName);
     disconnectLink.style.display = "";
 
     // 2. Get the active tab
@@ -259,7 +264,7 @@
     populateSelect("map-date", entries.filter((p) => COMPAT.date.includes(p.type)), "Don\u2019t include");
     // Body: "Page body" + compatible properties
     const bodyOptions = [
-      { name: "__page_body__", type: "page_body", label: "Page body (blocks)" },
+      { name: PAGE_BODY_TARGET, type: "page_body", label: "Page body (blocks)" },
       ...entries.filter((p) => COMPAT.body.includes(p.type)),
     ];
     populateSelect("map-body", bodyOptions, "Don\u2019t include");
@@ -314,7 +319,7 @@
     // Body: saved default → page body
     trySetSelect("map-body",
       pm.bodyTarget,
-      "__page_body__"
+      PAGE_BODY_TARGET
     );
   }
 
@@ -361,7 +366,7 @@
       propertyMappings.dateProperty = dateSel.value;
       propertyMappings.dateType = dateSel.selectedOptions[0]?.dataset.type || "date";
     }
-    if (bodySel.value === "__page_body__") {
+    if (bodySel.value === PAGE_BODY_TARGET) {
       propertyMappings.bodyTarget = "page_body";
     } else if (bodySel.value) {
       propertyMappings.bodyTarget = bodySel.value;
