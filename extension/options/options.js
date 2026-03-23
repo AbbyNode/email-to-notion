@@ -22,10 +22,13 @@
 
   const defaultDatabaseSelect = document.getElementById("default-database");
 
-  const optSubject = document.getElementById("opt-subject");
-  const optSender = document.getElementById("opt-sender");
-  const optDate = document.getElementById("opt-date");
-  const optBody = document.getElementById("opt-body");
+  const defaultSubjectProp = document.getElementById("default-subject-prop");
+  const defaultSenderProp = document.getElementById("default-sender-prop");
+  const defaultDateProp = document.getElementById("default-date-prop");
+  const defaultBodyTarget = document.getElementById("default-body-target");
+  const defaultBodyProp = document.getElementById("default-body-prop");
+  const bodyPropField = document.getElementById("body-prop-field");
+  const defaultBodyMode = document.getElementById("default-body-mode");
 
   const saveDefaultsBtn = document.getElementById("save-defaults-btn");
   const defaultsStatus = document.getElementById("defaults-status");
@@ -95,6 +98,7 @@
       "notionWorkspaceName",
       "defaultDatabaseId",
       "defaultOptions",
+      "defaultPropertyMappings",
     ]);
 
     if (stored.notionClientId) {
@@ -118,14 +122,24 @@
       await loadDatabases(stored.defaultDatabaseId);
     }
 
-    // Default options
-    if (stored.defaultOptions) {
-      const o = stored.defaultOptions;
-      if (typeof o.includeSubject === "boolean") optSubject.checked = o.includeSubject;
-      if (typeof o.includeSender === "boolean") optSender.checked = o.includeSender;
-      if (typeof o.includeDate === "boolean") optDate.checked = o.includeDate;
-      if (typeof o.includeBody === "boolean") optBody.checked = o.includeBody;
+    // Property mapping defaults
+    const pm = stored.defaultPropertyMappings || {};
+    if (pm.subjectProperty) defaultSubjectProp.value = pm.subjectProperty;
+    if (pm.senderProperty) defaultSenderProp.value = pm.senderProperty;
+    if (pm.dateProperty) defaultDateProp.value = pm.dateProperty;
+
+    // Body target
+    if (pm.bodyTarget && pm.bodyTarget !== "page_body") {
+      defaultBodyTarget.value = "property";
+      defaultBodyProp.value = pm.bodyTarget;
+      bodyPropField.style.display = "";
+    } else {
+      defaultBodyTarget.value = "page_body";
     }
+
+    // Body mode
+    const opts = stored.defaultOptions || {};
+    if (opts.bodyMode) defaultBodyMode.value = opts.bodyMode;
   }
 
   function updateAuthUI(token, workspaceName) {
@@ -228,17 +242,36 @@
     showStatus(authStatusMsg, "Disconnected.");
   });
 
+  // ── Body target toggle ────────────────────────────────────────────────────
+
+  defaultBodyTarget.addEventListener("change", () => {
+    bodyPropField.style.display = defaultBodyTarget.value === "property" ? "" : "none";
+  });
+
   // ── Default settings ──────────────────────────────────────────────────────
 
   saveDefaultsBtn.addEventListener("click", async () => {
-    const defaultOptions = {
-      includeSubject: optSubject.checked,
-      includeSender: optSender.checked,
-      includeDate: optDate.checked,
-      includeBody: optBody.checked,
+    const bodyTarget = defaultBodyTarget.value === "property"
+      ? (defaultBodyProp.value.trim() || "")
+      : "page_body";
+
+    const defaultPropertyMappings = {
+      subjectProperty: defaultSubjectProp.value.trim(),
+      senderProperty: defaultSenderProp.value.trim(),
+      dateProperty: defaultDateProp.value.trim(),
+      bodyTarget,
     };
+
+    const defaultOptions = {
+      includeSubject: true,
+      includeSender: true,
+      includeDate: true,
+      includeBody: true,
+      bodyMode: defaultBodyMode.value,
+    };
+
     const defaultDatabaseId = defaultDatabaseSelect.value;
-    await setStorage({ defaultOptions, defaultDatabaseId });
+    await setStorage({ defaultOptions, defaultDatabaseId, defaultPropertyMappings });
     showStatus(defaultsStatus, "✓ Defaults saved!");
   });
 

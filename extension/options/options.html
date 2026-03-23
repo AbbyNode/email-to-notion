@@ -377,7 +377,7 @@
     <div class="card">
       <div class="card-header">
         <h2>Default Export Settings</h2>
-        <p>Choose what to include in exported emails by default. These can be changed per-email in the export dialog.</p>
+        <p>Choose defaults for the export dialog. These can be changed per-email when exporting.</p>
       </div>
       <div class="card-body">
         <div class="field">
@@ -391,25 +391,48 @@
         <hr class="divider" />
 
         <div class="field">
-          <label class="etn-section-label">Include in exported pages</label>
-          <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="opt-subject" checked />
-              Email subject as page title
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="opt-sender" checked />
-              Sender name &amp; address (as a rich_text property)
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="opt-date" checked />
-              Date (as a date property)
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="opt-body" checked />
-              Email body (as page content blocks)
-            </label>
-          </div>
+          <label>Default Property Names</label>
+          <span class="hint">These names are used to auto-select properties when a database is chosen. Leave blank to auto-detect.</span>
+        </div>
+
+        <div class="field">
+          <label for="default-subject-prop">Subject property</label>
+          <input type="text" id="default-subject-prop" placeholder="e.g. Name (auto-detects title property)" />
+        </div>
+
+        <div class="field">
+          <label for="default-sender-prop">Sender property</label>
+          <input type="text" id="default-sender-prop" placeholder="e.g. From" />
+        </div>
+
+        <div class="field">
+          <label for="default-date-prop">Date property</label>
+          <input type="text" id="default-date-prop" placeholder="e.g. Date" />
+        </div>
+
+        <hr class="divider" />
+
+        <div class="field">
+          <label for="default-body-target">Body destination</label>
+          <select id="default-body-target">
+            <option value="page_body">Page body (blocks)</option>
+            <option value="property">Database property</option>
+          </select>
+          <span class="hint">Where the email body should be stored.</span>
+        </div>
+
+        <div class="field" id="body-prop-field" style="display:none;">
+          <label for="default-body-prop">Body property name</label>
+          <input type="text" id="default-body-prop" placeholder="e.g. Content" />
+        </div>
+
+        <div class="field">
+          <label for="default-body-mode">Body content scope</label>
+          <select id="default-body-mode">
+            <option value="last">Last email only</option>
+            <option value="full">Entire thread</option>
+          </select>
+          <span class="hint">Whether to include only the latest message or the full conversation.</span>
         </div>
       </div>
       <div class="card-footer">
