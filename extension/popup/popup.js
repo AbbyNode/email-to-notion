@@ -122,7 +122,7 @@
     // 2. Get the active tab
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const tab = tabs?.[0];
-    if (!tab?.url?.startsWith("https://mail.google.com")) {
+    if (!tab?.url?.startsWith("https://mail.google.com/")) {
       showState("not-gmail");
       return;
     }
