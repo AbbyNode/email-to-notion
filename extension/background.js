@@ -141,75 +141,96 @@ async function ensureDatabaseProperties(databaseId, accessToken, requiredProps) 
  * Create a page (email entry) in a Notion database.
  * @param {string} databaseId
  * @param {string} accessToken
- * @param {object} emailData  { subject, sender, senderEmail, body, date }
- * @param {object} options    { includeSubject, includeSender, includeBody, includeDate }
+ * @param {object} emailData        { subject, sender, senderEmail, body, date }
+ * @param {object} options           { includeSubject, includeSender, includeBody, includeDate }
+ * @param {object} [propertyMappings] Dynamic property mappings from the popup
  */
-async function createEmailPage(databaseId, accessToken, emailData, options) {
-  // Ensure any properties we intend to write actually exist in the database.
-  const requiredProps = {};
-  if (options.includeSender && emailData.sender) {
-    requiredProps["From"] = { rich_text: {} };
-  }
-  if (options.includeDate && emailData.date) {
-    requiredProps["Date"] = { date: {} };
-  }
-  if (Object.keys(requiredProps).length > 0) {
-    await ensureDatabaseProperties(databaseId, accessToken, requiredProps);
-  }
+async function createEmailPage(databaseId, accessToken, emailData, options, propertyMappings) {
+  // Get database schema to discover the title property
+  const db = await getDatabase(databaseId, accessToken);
+  const dbProps = db.properties ?? {};
+  const titlePropEntry = Object.entries(dbProps).find(([, v]) => v.type === "title");
+  const titlePropName = titlePropEntry ? titlePropEntry[0] : "Name";
 
-  // Build the properties object. We use a "Name" / title property and
-  // rich_text properties for everything else. If the database has custom
-  // schema the user can extend this via the options page.
   const properties = {};
-
-  // Title – always included (required by Notion)
-  properties["Name"] = {
-    title: [
-      {
-        type: "text",
-        text: {
-          content: options.includeSubject && emailData.subject
-            ? emailData.subject
-            : "(No Subject)",
-        },
-      },
-    ],
-  };
-
-  if (options.includeSender && emailData.sender) {
-    properties["From"] = {
-      rich_text: [{ type: "text", text: { content: `${emailData.sender} <${emailData.senderEmail}>` } }],
-    };
-  }
-
-  if (options.includeDate && emailData.date) {
-    properties["Date"] = {
-      date: { start: emailData.date },
-    };
-  }
-
-  // Build page content (children blocks) from email body
   const children = [];
 
-  if (options.includeBody && emailData.body) {
-    // Split body into paragraphs of ≤2000 chars (Notion block limit)
-    const paragraphs = emailData.body
-      .split(/\n{2,}/)
-      .map((p) => p.trim())
-      .filter(Boolean);
+  if (propertyMappings) {
+    // ── New flow: explicit property mappings from the popup ──────────────
 
-    for (const para of paragraphs) {
-      // Chunk to ≤2000 chars
-      const chunks = chunkString(para, 2000);
-      for (const chunk of chunks) {
-        children.push({
-          object: "block",
-          type: "paragraph",
-          paragraph: {
-            rich_text: [{ type: "text", text: { content: chunk } }],
-          },
-        });
+    // Subject
+    if (options.includeSubject && propertyMappings.subjectProperty) {
+      const name = propertyMappings.subjectProperty;
+      const type = propertyMappings.subjectType || dbProps[name]?.type || "title";
+      properties[name] = buildPropertyValue(type, emailData.subject || "(No Subject)");
+    }
+
+    // Notion always requires the title property to be set
+    if (!properties[titlePropName]) {
+      properties[titlePropName] = buildPropertyValue("title", emailData.subject || "(No Subject)");
+    }
+
+    // Sender
+    if (options.includeSender && propertyMappings.senderProperty) {
+      const name = propertyMappings.senderProperty;
+      const type = propertyMappings.senderType || dbProps[name]?.type || "rich_text";
+      if (type === "email") {
+        properties[name] = buildPropertyValue("email", emailData.senderEmail || emailData.sender);
+      } else {
+        const senderStr = emailData.senderEmail
+          ? `${emailData.sender} <${emailData.senderEmail}>`
+          : emailData.sender;
+        properties[name] = buildPropertyValue(type, senderStr);
       }
+    }
+
+    // Date
+    if (options.includeDate && propertyMappings.dateProperty) {
+      const name = propertyMappings.dateProperty;
+      const type = propertyMappings.dateType || dbProps[name]?.type || "date";
+      properties[name] = buildPropertyValue(type, emailData.date);
+    }
+
+    // Body
+    if (options.includeBody) {
+      const bodyText = emailData.body || "";
+      if (propertyMappings.bodyTarget === "page_body") {
+        appendBodyAsBlocks(children, bodyText);
+      } else if (propertyMappings.bodyTarget) {
+        const name = propertyMappings.bodyTarget;
+        const type = propertyMappings.bodyType || dbProps[name]?.type || "rich_text";
+        properties[name] = buildPropertyValue(type, bodyText);
+      }
+    }
+
+  } else {
+    // ── Legacy flow: hardcoded property names (backward compat) ─────────
+
+    const requiredProps = {};
+    if (options.includeSender && emailData.sender) requiredProps["From"] = { rich_text: {} };
+    if (options.includeDate && emailData.date) requiredProps["Date"] = { date: {} };
+    if (Object.keys(requiredProps).length > 0) {
+      await ensureDatabaseProperties(databaseId, accessToken, requiredProps);
+    }
+
+    properties[titlePropName] = buildPropertyValue(
+      "title",
+      options.includeSubject && emailData.subject ? emailData.subject : "(No Subject)"
+    );
+
+    if (options.includeSender && emailData.sender) {
+      properties["From"] = buildPropertyValue(
+        "rich_text",
+        `${emailData.sender} <${emailData.senderEmail}>`
+      );
+    }
+
+    if (options.includeDate && emailData.date) {
+      properties["Date"] = buildPropertyValue("date", emailData.date);
+    }
+
+    if (options.includeBody && emailData.body) {
+      appendBodyAsBlocks(children, emailData.body);
     }
   }
 
@@ -223,6 +244,48 @@ async function createEmailPage(databaseId, accessToken, emailData, options) {
     method: "POST",
     body: JSON.stringify(pageBody),
   });
+}
+
+/** Build a Notion property value object for the given type. */
+function buildPropertyValue(type, content) {
+  const str = String(content);
+  switch (type) {
+    case "title":
+      return { title: [{ type: "text", text: { content: str.slice(0, 2000) } }] };
+    case "rich_text": {
+      const chunks = chunkString(str, 2000);
+      return { rich_text: chunks.map((c) => ({ type: "text", text: { content: c } })) };
+    }
+    case "email":
+      return { email: str };
+    case "url":
+      return { url: str };
+    case "phone_number":
+      return { phone_number: str };
+    case "date":
+      return { date: { start: str } };
+    case "number":
+      return { number: parseFloat(str) || 0 };
+    case "select":
+      return { select: { name: str.slice(0, 100) } };
+    default:
+      return { rich_text: [{ type: "text", text: { content: str.slice(0, 2000) } }] };
+  }
+}
+
+/** Append email body text as paragraph blocks. */
+function appendBodyAsBlocks(children, bodyText) {
+  const paragraphs = bodyText.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  for (const para of paragraphs) {
+    const chunks = chunkString(para, 2000);
+    for (const chunk of chunks) {
+      children.push({
+        object: "block",
+        type: "paragraph",
+        paragraph: { rich_text: [{ type: "text", text: { content: chunk } }] },
+      });
+    }
+  }
 }
 
 /** Split a string into chunks of maxLen characters. */
@@ -372,11 +435,18 @@ async function handleMessage(message) {
       return listDatabases(notionAccessToken);
     }
 
+    case "GET_DATABASE_PROPERTIES": {
+      const { notionAccessToken } = await getStorage(["notionAccessToken"]);
+      if (!notionAccessToken) throw new Error("Not authenticated with Notion");
+      const db = await getDatabase(message.databaseId, notionAccessToken);
+      return db.properties ?? {};
+    }
+
     case "EXPORT_EMAIL": {
       const { notionAccessToken } = await getStorage(["notionAccessToken"]);
       if (!notionAccessToken) throw new Error("Not authenticated with Notion");
-      const { databaseId, emailData, options } = message;
-      return createEmailPage(databaseId, notionAccessToken, emailData, options);
+      const { databaseId, emailData, options, propertyMappings } = message;
+      return createEmailPage(databaseId, notionAccessToken, emailData, options, propertyMappings);
     }
 
     case "GET_SETTINGS": {
@@ -387,6 +457,7 @@ async function handleMessage(message) {
         "notionWorkspaceName",
         "defaultDatabaseId",
         "defaultOptions",
+        "defaultPropertyMappings",
       ]);
       // Don't expose secret
       delete result.notionClientSecret;

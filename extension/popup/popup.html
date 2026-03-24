@@ -12,8 +12,7 @@
       font-size: 14px;
       color: #1a1a1a;
       background: #fff;
-      width: 300px;
-      min-height: 160px;
+      width: 380px;
     }
 
     .header {
@@ -31,23 +30,34 @@
       font-size: 15px;
       font-weight: 600;
       line-height: 1.2;
+      flex: 1;
     }
 
-    .header-text p {
-      font-size: 12px;
-      color: #666;
-      margin-top: 2px;
+    .settings-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #888;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
     }
+    .settings-btn:hover { background: #eee; color: #333; }
 
     .body {
       padding: 16px;
     }
 
+    .state { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Status row ──────────────────────────────────────────────────── */
+
     .status-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 14px;
     }
 
     .status-dot {
@@ -64,19 +74,162 @@
       color: #444;
     }
 
-    .workspace-name {
-      font-weight: 600;
-      color: #1a1a1a;
+    .ws-name { font-weight: 600; color: #1a1a1a; }
+
+    /* ── Info text ───────────────────────────────────────────────────── */
+
+    .info-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
     }
 
-    .actions {
+    .info-box {
+      background: #f0f4ff;
+      border: 1px solid #c7d6ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #3b5bdb;
+      line-height: 1.5;
+    }
+
+    /* ── Section / fields ────────────────────────────────────────────── */
+
+    .section {
       display: flex;
       flex-direction: column;
+      gap: 6px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .preview-box {
+      background: #f9f9f9;
+      border: 1px solid #ececec;
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .preview-row {
+      font-size: 12px;
+      color: #444;
+      display: flex;
+      gap: 6px;
+      line-height: 1.4;
+    }
+
+    .preview-label {
+      font-weight: 600;
+      color: #888;
+      flex-shrink: 0;
+    }
+
+    .preview-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Select / inputs ─────────────────────────────────────────────── */
+
+    .select {
+      padding: 7px 10px;
+      border: 1px solid #d4d4d8;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1a1a1a;
+      background: #fafafa;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .select:focus { outline: none; border-color: #6366f1; background: #fff; }
+    .select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .select-sm {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    .db-row {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .db-row .select { flex: 1; min-width: 0; }
+
+    .btn-icon {
+      background: #f0f0f0;
+      border: 1px solid #d4d4d8;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 15px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: #e4e4e4; }
+
+    /* ── Mapping grid ────────────────────────────────────────────────── */
+
+    .mapping-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mapping-row {
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
 
-    .btn {
+    .mapping-row label {
+      font-size: 12px;
+      color: #555;
+      min-width: 52px;
+      flex-shrink: 0;
+    }
+
+    .mapping-row .select { flex: 1; }
+
+    /* ── Radio group ─────────────────────────────────────────────────── */
+
+    .radio-group {
       display: flex;
+      gap: 14px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .radio-label input[type="radio"] {
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────────────── */
+
+    .btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
@@ -90,39 +243,58 @@
       width: 100%;
       text-decoration: none;
     }
-
     .btn:disabled { opacity: 0.5; cursor: default; }
 
-    .btn-primary {
-      background: #000;
-      color: #fff;
-    }
+    .btn-primary { background: #000; color: #fff; }
     .btn-primary:hover:not(:disabled) { background: #222; }
 
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
+    .btn-secondary { background: #f0f0f0; color: #333; }
     .btn-secondary:hover:not(:disabled) { background: #e4e4e4; }
 
-    .btn-danger {
-      background: #fff0f0;
-      color: #dc2626;
-      border: 1px solid #fecaca;
-    }
+    .btn-danger { background: #fff0f0; color: #dc2626; border: 1px solid #fecaca; }
     .btn-danger:hover:not(:disabled) { background: #fee2e2; }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 12px;
+      width: auto;
+    }
+
+    /* ── Export footer ────────────────────────────────────────────────── */
+
+    .export-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .export-status {
+      flex: 1;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+    .export-status.success { color: #16a34a; }
+    .export-status.error { color: #dc2626; }
+    .export-status a { color: #4f46e5; }
+
+    /* ── Divider ──────────────────────────────────────────────────────── */
 
     .divider {
       border: none;
       border-top: 1px solid #efefef;
-      margin: 12px 0;
+      margin: 4px 0;
     }
+
+    /* ── Footer links ────────────────────────────────────────────────── */
 
     .footer-links {
       display: flex;
       gap: 12px;
       justify-content: center;
       padding: 10px 16px 14px;
+      border-top: 1px solid #efefef;
     }
 
     .footer-links a {
@@ -131,6 +303,8 @@
       text-decoration: none;
     }
     .footer-links a:hover { color: #333; text-decoration: underline; }
+
+    /* ── Loading spinner ─────────────────────────────────────────────── */
 
     .loading {
       display: flex;
@@ -152,88 +326,149 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .info-box {
-      background: #f0f4ff;
-      border: 1px solid #c7d6ff;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #3b5bdb;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-
-    .gmail-hint {
-      background: #f9f9f9;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #666;
-      line-height: 1.5;
-    }
-
-    .gmail-hint strong { color: #333; }
   </style>
 </head>
 <body>
   <div class="header">
     <div class="header-icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.373.466l1.822 1.447zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279V9.107l-1.215-.14c-.093-.514.28-.887.747-.933l3.222-.187z" fill="#1a1a1a"/>
       </svg>
     </div>
     <div class="header-text">
       <h1>Email to Notion</h1>
-      <p>Export Gmail to Notion</p>
     </div>
+    <button class="settings-btn" id="settings-btn" title="Settings">&#x2699;</button>
   </div>
 
   <div class="body">
-    <div class="loading" id="loading-state">
+
+    <!-- Loading state -->
+    <div class="loading" id="state-loading">
       <div class="spinner"></div>
-      <span>Loading…</span>
+      <span>Loading&hellip;</span>
     </div>
 
-    <!-- Connected state -->
-    <div id="connected-state" style="display:none;">
-      <div class="status-row">
-        <div class="status-dot connected"></div>
-        <div class="status-text">
-          Connected to <span class="workspace-name" id="workspace-name">Notion</span>
-        </div>
-      </div>
-      <div class="gmail-hint">
-        <strong>How to export:</strong><br>
-        Open an email in Gmail and click the
-        <strong>Export to Notion</strong> button (next to the Print button).
-      </div>
-      <hr class="divider" />
-      <div class="actions">
-        <button class="btn btn-secondary" id="open-options-btn">⚙ Settings</button>
-        <button class="btn btn-danger" id="logout-btn">Disconnect Notion</button>
-      </div>
-    </div>
-
-    <!-- Disconnected state -->
-    <div id="disconnected-state" style="display:none;">
+    <!-- Not authenticated -->
+    <div id="state-not-auth" class="state" style="display:none;">
       <div class="status-row">
         <div class="status-dot disconnected"></div>
         <div class="status-text">Not connected to Notion</div>
       </div>
       <div class="info-box">
         Connect your Notion account to start exporting emails.
-        You'll need to configure your Notion integration credentials in Settings first.
+        Configure your integration credentials in Settings first.
       </div>
-      <div class="actions">
-        <button class="btn btn-primary" id="connect-btn">Connect Notion Account</button>
-        <button class="btn btn-secondary" id="open-options-btn-disconnected">⚙ Settings</button>
+      <button class="btn btn-primary" id="connect-btn">Connect Notion Account</button>
+      <button class="btn btn-secondary" id="setup-btn">&#x2699; Settings</button>
+    </div>
+
+    <!-- Not on Gmail -->
+    <div id="state-not-gmail" class="state" style="display:none;">
+      <div class="status-row">
+        <div class="status-dot connected"></div>
+        <div class="status-text">Connected to <span class="ws-name" id="ws-name-1">Notion</span></div>
+      </div>
+      <div class="info-box">
+        Navigate to <strong>Gmail</strong> and open an email to export it to Notion.
       </div>
     </div>
+
+    <!-- No email open -->
+    <div id="state-no-email" class="state" style="display:none;">
+      <div class="status-row">
+        <div class="status-dot connected"></div>
+        <div class="status-text">Connected to <span class="ws-name" id="ws-name-2">Notion</span></div>
+      </div>
+      <div class="info-box">
+        Open an email in Gmail, then click this extension icon to export it.
+      </div>
+    </div>
+
+    <!-- Export form -->
+    <div id="state-export" class="state" style="display:none;">
+      <!-- Email preview -->
+      <div class="section">
+        <div class="section-label">Email</div>
+        <div class="preview-box">
+          <div class="preview-row">
+            <span class="preview-label">Subject:</span>
+            <span class="preview-value" id="preview-subject">–</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">From:</span>
+            <span class="preview-value" id="preview-sender">–</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Date:</span>
+            <span class="preview-value" id="preview-date">–</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Database picker -->
+      <div class="section">
+        <div class="section-label">Database</div>
+        <div class="db-row">
+          <select id="db-select" class="select">
+            <option value="">Loading&hellip;</option>
+          </select>
+          <button id="refresh-db" class="btn-icon" title="Refresh databases" aria-label="Refresh databases">&#x21bb;</button>
+        </div>
+      </div>
+
+      <!-- Property mapping (shown once a database is selected) -->
+      <div class="section" id="mapping-section" style="display:none;">
+        <div class="section-label">Property Mapping</div>
+        <div class="mapping-grid">
+          <div class="mapping-row">
+            <label for="map-subject">Subject</label>
+            <select id="map-subject" class="select select-sm"></select>
+          </div>
+          <div class="mapping-row">
+            <label for="map-sender">Sender</label>
+            <select id="map-sender" class="select select-sm"></select>
+          </div>
+          <div class="mapping-row">
+            <label for="map-date">Date</label>
+            <select id="map-date" class="select select-sm"></select>
+          </div>
+          <div class="mapping-row">
+            <label for="map-body">Body</label>
+            <select id="map-body" class="select select-sm"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body content scope -->
+      <div class="section">
+        <div class="section-label">Body Content</div>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="body-mode" value="last" checked>
+            Last email only
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="body-mode" value="full">
+            Entire thread
+          </label>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Export status + button -->
+      <div class="export-footer">
+        <span id="export-status" class="export-status"></span>
+        <button id="export-btn" class="btn btn-primary btn-sm">Export to Notion</button>
+      </div>
+    </div>
+
   </div>
 
   <div class="footer-links">
-    <a href="#" id="options-link">Options</a>
+    <a href="#" id="options-link">Settings</a>
+    <a href="#" id="disconnect-link" style="display:none;">Disconnect</a>
     <a href="https://developers.notion.com" target="_blank" rel="noopener">Notion Docs</a>
   </div>
 
