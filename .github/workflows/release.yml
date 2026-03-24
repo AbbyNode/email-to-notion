@@ -1,0 +1,92 @@
+# Release workflow
+#
+# Runs on every push to `main` (i.e. after a PR is merged).
+# Can also be triggered manually from the Actions tab.
+#
+# What it does
+# ────────────
+# 1. Builds the Firefox and Chrome extension zips.
+# 2. Reads the extension version from manifest.firefox.json.
+# 3. Creates (or updates) a GitHub Release tagged `v<version>` and attaches
+#    both zips – the Firefox zip can then be uploaded manually to the Firefox
+#    Add-on Developer Hub (https://addons.mozilla.org/developers/).
+# 4. [Optional] Automatically submits the new version to Mozilla's AMO for
+#    signing via `web-ext sign`.  This step is **skipped** unless both of the
+#    following repository secrets are set:
+#      • AMO_API_KEY    – your AMO JWT issuer (found in your AMO developer profile)
+#      • AMO_API_SECRET – your AMO JWT secret
+#    See https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#sign
+#    and https://addons-server.readthedocs.io/en/latest/topics/api/auth.html
+#    for instructions on generating API credentials.
+#
+#    channel: listed   → submits for Mozilla's manual review queue (may take days/weeks)
+#    channel: unlisted → signs immediately (self-distributed / sideload only)
+#
+#    Change the `channel` input below to `unlisted` if you want instant signing
+#    without going through Mozilla review (e.g. for beta / internal testing).
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create GitHub Releases and push tags
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Firefox extension
+        run: node extension/build.js firefox
+
+      - name: Build Chrome extension
+        run: node extension/build.js chrome
+
+      - name: Read extension version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./extension/manifest.firefox.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            extension/dist/email-to-notion-firefox.zip
+            extension/dist/email-to-notion-chrome.zip
+
+      # ── Optional: auto-submit to Firefox Add-ons (AMO) ───────────────────────
+      # The sign step is skipped when the AMO_API_KEY secret is not configured.
+      # We check via a dedicated run step so the condition is evaluated against
+      # a plain env variable rather than a secret expression directly.
+      - name: Check for AMO credentials
+        id: amo_check
+        env:
+          AMO_API_KEY: ${{ secrets.AMO_API_KEY }}
+        run: |
+          if [ -n "$AMO_API_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Submit to Firefox Add-ons (AMO)
+        if: steps.amo_check.outputs.enabled == 'true'
+        uses: kewisch/action-web-ext@v1
+        with:
+          cmd: sign
+          source: extension/dist/email-to-notion-firefox.zip
+          channel: listed
+          apiKey: ${{ secrets.AMO_API_KEY }}
+          apiSecret: ${{ secrets.AMO_API_SECRET }}
